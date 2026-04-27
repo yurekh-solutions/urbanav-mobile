@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "UrbanAV",
+    "slug": "urbanav-mobile",
+    "version": "1.0.0",
+    "description": "UrbanAV — India's real-time AV rental marketplace. Post your event requirement, get matched with top vendors, book with secure advance + OTP trust layer.",
+    "orientation": "portrait",
+    "icon": "./assets/logo.jpg",
+    "userInterfaceStyle": "light",
+    "primaryColor": "#7B25F4",
+    "splash": {
+      "image": "./assets/logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#EFEAF4"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.urbanav.app",
+      "icon": "./assets/logo.jpg"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.jpg",
+        "backgroundColor": "#EFEAF4"
+      },
+      "package": "com.urbanav.app"
+    },
+    "web": {
+      "name": "UrbanAV — AV Rental Marketplace",
+      "shortName": "UrbanAV",
+      "description": "Post your event requirement, get matched with top AV vendors, book with secure advance + OTP trust layer.",
+      "themeColor": "#7B25F4",
+      "backgroundColor": "#EFEAF4",
+      "favicon": "./assets/logo.jpg"
+    }
+  }
+}
