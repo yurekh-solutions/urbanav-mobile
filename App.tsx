@@ -20,7 +20,6 @@ import EquipmentDetailScreen from './src/screens/EquipmentDetailScreen';
 import ChatScreen from './src/screens/ChatScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 import OrderDetailScreen from './src/screens/OrderDetailScreen';
-import SupplierDashboardScreen from './src/screens/SupplierDashboardScreen';
 import RequirementScreen from './src/screens/RequirementScreen';
 import MatchResultsScreen from './src/screens/MatchResultsScreen';
 import InquiryScreen from './src/screens/InquiryScreen';
@@ -211,7 +210,6 @@ export default function App() {
               <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
               <Stack.Screen name="Checkout" component={CheckoutScreen} />
               <Stack.Screen name="CategoryDetail" component={CategoriesScreen} />
-              <Stack.Screen name="SupplierDashboard" component={SupplierDashboardScreen} />
               <Stack.Screen name="Cart" component={CartScreen} />
               <Stack.Screen name="MatchResults" component={MatchResultsScreen} />
               <Stack.Screen name="Inquiry" component={InquiryScreen} />

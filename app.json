@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#EFEAF4"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.urbanav.app",
@@ -33,6 +35,12 @@
       "themeColor": "#7B25F4",
       "backgroundColor": "#EFEAF4",
       "favicon": "./assets/logo.jpg"
+    },
+    "owner": "soniajaiswal",
+    "extra": {
+      "eas": {
+        "projectId": "8fc46744-1195-48f4-ab96-f06d924f7197"
+      }
     }
   }
 }

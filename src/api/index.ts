@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const API_URL = 'http://localhost:3002/api';
+const API_URL = 'https://server-xb4a.onrender.com/api';
 export const API_BASE = API_URL.replace(/\/api$/, '');
 
 /** Resolve a possibly-relative media URL (e.g. `/uploads/xxx.jpg`) to an absolute URL. */
@@ -42,6 +42,7 @@ export const authAPI = {
 
 export const equipmentAPI = {
   getAll: (params?: any) => api.get('/equipment', { params }),
+  getMine: () => api.get('/equipment/mine'),
   getById: (id: string) => api.get(`/equipment/${id}`),
   create: (data: any) => api.post('/equipment', data),
   update: (id: string, data: any) => api.put(`/equipment/${id}`, data),

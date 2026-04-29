@@ -34,7 +34,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true });
     try {
-      // Try real backend first; fall back to demo if unreachable.
+      // Call backend; demo credentials are handled server-side via .env.
       let user: any;
       let token: string;
       try {
@@ -43,18 +43,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user = d.user ?? d;
         token = d.token ?? d.accessToken ?? 'mock-token';
       } catch (apiErr: any) {
-        // Allow demo accounts offline
-        const isDemo =
-          (email === 'buyer@test.com' || email === 'supplier@test.com') &&
-          password === 'password123';
-        if (!isDemo) throw apiErr;
-        user = {
-          id: email === 'buyer@test.com' ? 'demo-buyer' : 'demo-supplier',
-          name: email === 'buyer@test.com' ? 'Demo Buyer' : 'Demo Supplier',
-          email,
-          role: email === 'buyer@test.com' ? 'buyer' : 'supplier',
-        };
-        token = 'mock-token';
+        // Offline fallback is removed — let the server return the error.
+        throw apiErr;
       }
 
       await AsyncStorage.multiSet([
@@ -73,11 +63,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   register: async (data: any) => {
     set({ isLoading: true });
+    // Force buyer role for this app (urbanav-mobile is buyer-only).
+    const payload = { ...data, role: 'buyer', userType: 'buyer' };
     try {
       let user: any;
       let token: string;
       try {
-        const res = await authAPI.register(data);
+        const res = await authAPI.register(payload);
         const d: any = res.data || {};
         user = d.user ?? d;
         token = d.token ?? d.accessToken ?? 'mock-token';
@@ -85,9 +77,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Offline fallback so UI works without backend
         user = {
           id: `local_${Date.now()}`,
-          name: data.name,
-          email: data.email,
-          role: data.role,
+          name: payload.name,
+          email: payload.email,
+          role: 'buyer',
+          userType: 'buyer',
         };
         token = 'mock-token';
       }
@@ -334,48 +327,86 @@ interface CartState {
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
+  hydrate: () => Promise<void>;
 }
+
+const CART_STORAGE_KEY = 'urbanav_cart_v1';
+
+const persistCart = (items: CartItem[]) => {
+  try {
+    // Strip non-serializable image sources; keep ids so we can rehydrate visuals
+    const slim = items.map((i) => ({
+      id: i.id,
+      name: i.name,
+      price: i.price,
+      quantity: i.quantity,
+      rentalDays: i.rentalDays,
+    }));
+    AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(slim)).catch(() => {});
+  } catch {
+    // ignore
+  }
+};
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
-  
+
   addToCart: (item: CartItem) => {
     set((state) => {
       const existing = state.items.find((i) => i.id === item.id);
-      if (existing) {
-        return {
-          items: state.items.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-          ),
-        };
-      }
-      return { items: [...state.items, item] };
+      const next = existing
+        ? {
+            items: state.items.map((i) =>
+              i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+            ),
+          }
+        : { items: [...state.items, item] };
+      persistCart(next.items);
+      return next;
     });
   },
-  
+
   removeFromCart: (id: string) => {
-    set((state) => ({
-      items: state.items.filter((item) => item.id !== id),
-    }));
+    set((state) => {
+      const items = state.items.filter((item) => item.id !== id);
+      persistCart(items);
+      return { items };
+    });
   },
-  
+
   updateQuantity: (id: string, quantity: number) => {
-    set((state) => ({
-      items: state.items.map((item) =>
+    set((state) => {
+      const items = state.items.map((item) =>
         item.id === id ? { ...item, quantity } : item
-      ),
-    }));
+      );
+      persistCart(items);
+      return { items };
+    });
   },
-  
+
   clearCart: () => {
+    AsyncStorage.removeItem(CART_STORAGE_KEY).catch(() => {});
     set({ items: [] });
   },
-  
+
   getTotal: () => {
     return get().items.reduce((total, item) => {
       const price = typeof item.price === 'number' ? item.price : 0;
       return total + price * item.quantity * item.rentalDays;
     }, 0);
+  },
+
+  hydrate: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(CART_STORAGE_KEY);
+      if (!raw) return;
+      const slim = JSON.parse(raw) as Array<Omit<CartItem, 'image'>>;
+      // image source will be resolved by consumers via pickEquipmentImage() if needed
+      const items = slim.map((s) => ({ ...s, image: undefined as any }));
+      set({ items });
+    } catch {
+      // ignore
+    }
   },
 }));
 
@@ -535,6 +566,9 @@ export const useInquiryStore = create<InquiryState>((set) => ({
       ),
     })),
 
-  accept: (inquiryId) =>
-    set((s) => ({ list: s.list.map((i) => (i.id === inquiryId ? { ...i, status: 'accepted' } : i)) })),
+  accept: (inquiryId) => {
+    // Fire-and-forget backend call; UI already reflects acceptance locally
+    inquiryAPI.accept(inquiryId).catch(() => {});
+    set((s) => ({ list: s.list.map((i) => (i.id === inquiryId ? { ...i, status: 'accepted' } : i)) }));
+  },
 }));

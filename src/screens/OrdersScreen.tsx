@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { MessageSquare, Eye, CalendarDays } from 'lucide-react-native';
 import {
   LightScreenBackground,
@@ -111,6 +112,13 @@ export default function OrdersScreen({ navigation }: any) {
   useEffect(() => {
     loadOrders();
   }, []);
+
+  // Refresh whenever the screen regains focus (e.g., after placing an order)
+  useFocusEffect(
+    useCallback(() => {
+      loadOrders();
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
