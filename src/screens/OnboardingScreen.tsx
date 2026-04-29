@@ -20,7 +20,6 @@ import {
   ArrowRight,
   Store,
   CalendarCheck,
-  Handshake,
   Check,
 } from 'lucide-react-native';
 import {
@@ -37,8 +36,6 @@ import {
 import { useAuthStore } from '../store';
 
 const LOGO = require('../../assets/logo.jpg');
-
-type Role = 'buyer' | 'supplier';
 
 // Buyer onboarding slides
 const BUYER_SLIDES = [
@@ -71,40 +68,6 @@ const BUYER_SLIDES = [
     title: 'Book with OTP Trust Shield',
     body: 'Pay a small advance. Start & End OTPs protect both sides until the job is done right.',
     points: ['Secure payment protection', 'OTP verified handovers', 'Dispute resolution support'],
-  },
-];
-
-// Supplier onboarding slides
-const SUPPLIER_SLIDES = [
-  {
-    key: 'list',
-    Icon: Store,
-    tint: '#F97316',
-    step: 1,
-    totalSteps: 3,
-    title: 'List Your Equipment',
-    body: 'Add your AV inventory — projectors, speakers, lights, screens and more to start receiving inquiries.',
-    points: ['Upload equipment photos', 'Set competitive pricing', 'Specify availability'],
-  },
-  {
-    key: 'inquiry',
-    Icon: CalendarCheck,
-    tint: '#8B5CF6',
-    step: 2,
-    totalSteps: 3,
-    title: 'Receive & Manage Inquiries',
-    body: 'Get notified instantly when buyers request quotes. Respond quickly to win more bookings.',
-    points: ['Real-time notifications', 'Quick quote generation', 'Calendar availability sync'],
-  },
-  {
-    key: 'earn',
-    Icon: Handshake,
-    tint: '#059669',
-    step: 3,
-    totalSteps: 3,
-    title: 'Earn with Trust & Safety',
-    body: 'Secure payments, OTP-verified handovers, and review system to build your reputation.',
-    points: ['Guaranteed payment collection', 'Start & End OTP verification', 'Build your 5-star rating'],
   },
 ];
 
@@ -170,7 +133,7 @@ function RoleCard({
   subtitle,
   tint,
 }: {
-  role: Role;
+  role: 'buyer';
   selected: boolean;
   onSelect: () => void;
   icon: any;
@@ -243,11 +206,11 @@ export default function OnboardingScreen({ navigation }: any) {
   const { width } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
   const [page, setPage] = useState(0);
-  const [role, setRole] = useState<Role | null>(null);
+  const [role, setRole] = useState<'buyer' | null>(null);
   const { completeOnboarding, continueAsGuest } = useAuthStore();
 
-  const slides = role === 'supplier' ? SUPPLIER_SLIDES : BUYER_SLIDES;
-  const totalSlides = slides.length + 1; // +1 for role selection
+  const slides = BUYER_SLIDES;
+  const totalSlides = slides.length + 1; // +1 for buyer-only selection
   const isRolePage = page === slides.length;
   const currentSlide = page < slides.length ? slides[page] : null;
 
@@ -513,11 +476,11 @@ export default function OnboardingScreen({ navigation }: any) {
                   },
                 ]}
               >
-                Are you looking to rent equipment or provide it?
+                Choose your role to get started.
               </Text>
             </View>
 
-            {/* Role cards */}
+            {/* Buyer card (auto-selected) */}
             <RoleCard
               role="buyer"
               selected={role === 'buyer'}
@@ -527,33 +490,6 @@ export default function OnboardingScreen({ navigation }: any) {
               subtitle="I need AV equipment for my events — weddings, corporate, parties, or any occasion"
               tint={NEON.purple}
             />
-            <RoleCard
-              role="supplier"
-              selected={role === 'supplier'}
-              onSelect={() => setRole('supplier')}
-              icon={Store}
-              title="I'm a Supplier"
-              subtitle="I have AV equipment to rent out and want to reach more customers in my city"
-              tint="#F97316"
-            />
-
-            {/* Selected role hint */}
-            {role && (
-              <View
-                style={{
-                  backgroundColor: `${role === 'buyer' ? NEON.purple : '#F97316'}10`,
-                  padding: SPACING.md,
-                  borderRadius: RADIUS.lg,
-                  marginTop: SPACING.sm,
-                }}
-              >
-                <Text style={[TYPE.caption, { color: LIGHT.textSecondary, textAlign: 'center' }]}>
-                  {role === 'buyer'
-                    ? "You'll be able to browse equipment, post requirements, and book vendors."
-                    : "You'll be able to list equipment, manage inquiries, and grow your rental business."}
-                </Text>
-              </View>
-            )}
           </View>
         </ScrollView>
 
