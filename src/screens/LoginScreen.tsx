@@ -11,8 +11,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
-import { ScreenBackground, SEMANTIC, SPACING, RADIUS, NEON, NeuCard, NeuInput, NeuButton, NEU, Toast } from '../components/ui';
+import { Eye, EyeOff, ArrowLeft, Mail, Lock } from 'lucide-react-native';
+import { ScreenBackground, SEMANTIC, SPACING, RADIUS, NEON, NEU, NeuCard, NeuInput, NeuButton, Toast } from '../components/ui';
 import { useAuthStore } from '../store';
 
 const LOGO = require('../../assets/logo.jpg');
@@ -73,7 +73,7 @@ function LoginContent({ navigation }: any) {
       <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING['2xl'] }]}>back</Text>
 
       {/* Neumorphic form card */}
-      <NeuCard style={styles.neuCard} padding={SPACING.xl}>
+      <View style={styles.neuCard}>
         <NeuInput
           label="Email"
           placeholder="you@example.com"
@@ -81,7 +81,8 @@ function LoginContent({ navigation }: any) {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
-          containerStyle={{ marginBottom: SPACING.md }}
+          leftIcon={<Mail size={18} color="rgba(255,255,255,0.5)" />}
+          containerStyle={{ marginBottom: SPACING.lg }}
         />
         <NeuInput
           label="Password"
@@ -89,6 +90,7 @@ function LoginContent({ navigation }: any) {
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPw}
+          leftIcon={<Lock size={18} color="rgba(255,255,255,0.5)" />}
           rightIcon={
             <TouchableOpacity onPress={() => setShowPw(!showPw)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               {showPw
@@ -96,7 +98,7 @@ function LoginContent({ navigation }: any) {
                 : <Eye size={20} color="rgba(247,217,255,0.6)" />}
             </TouchableOpacity>
           }
-          containerStyle={{ marginBottom: SPACING.lg }}
+          containerStyle={{ marginBottom: SPACING.xl }}
         />
 
         {error ? (
@@ -104,12 +106,14 @@ function LoginContent({ navigation }: any) {
         ) : null}
 
         {/* Neumorphic sign in button */}
-        <NeuButton
-          title={isLoading ? 'SIGNING IN...' : 'SIGN IN'}
-          onPress={handleLogin}
-          disabled={isLoading}
-          fullWidth
-        />
+        <View style={{ marginBottom: SPACING.lg }}>
+          <NeuButton
+            title={isLoading ? 'SIGNING IN...' : 'SIGN IN'}
+            onPress={handleLogin}
+            disabled={isLoading}
+            fullWidth
+          />
+        </View>
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
@@ -124,7 +128,7 @@ function LoginContent({ navigation }: any) {
           variant="ghost"
           fullWidth
         />
-      </NeuCard>
+      </View>
       
       {/* Toast notification */}
       <Toast
@@ -177,7 +181,7 @@ function RegisterContent({ navigation }: any) {
   return (
     <>
       {/* Back */}
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backRow} activeOpacity={0.7}>
+      <TouchableOpacity onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.replace('Home')} style={styles.backRow} activeOpacity={0.7}>
         <ArrowLeft size={20} color="rgba(247, 217, 255, 0.5)" />
         <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
@@ -357,8 +361,18 @@ const styles = StyleSheet.create({
 
   // Neumorphic card
   neuCard: {
-    padding: SPACING.xl,
-    marginTop: SPACING.base,
+    width: '95%',
+    maxWidth: 480,
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING['2xl'],
+    marginTop: SPACING.lg,
+    // Neumorphic outer shadow (light)
+    backgroundColor: NEU.bg,
+    shadowColor: NEU.shadowLight,
+    shadowOffset: { width: -8, height: -8 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 8,
   },
 
   // Label (used for neu input)

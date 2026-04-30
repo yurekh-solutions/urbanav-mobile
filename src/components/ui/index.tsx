@@ -763,7 +763,7 @@ export const NeuButton: React.FC<NeuButtonProps> = ({
   const isDanger = variant === 'danger';
 
   const bgColor = isPrimary ? BRAND[600] : isGhost ? N_BG : '#3A0A14';
-  const textColor = isPrimary ? '#FFF' : isGhost ? NEON.glow : SEMANTIC.error;
+  const textColor = isPrimary ? '#FFF' : isGhost ? '#FFF' : SEMANTIC.error;
   const glowColor = isPrimary ? NEON.purple : isGhost ? `${NEON.glow}44` : SEMANTIC.error;
 
   return (

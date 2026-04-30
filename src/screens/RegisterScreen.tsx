@@ -480,7 +480,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
           >
             <View style={styles.header}>
               <TouchableOpacity
-                onPress={() => currentStep > 1 ? handleBack() : navigation.goBack()}
+                onPress={() => currentStep > 1 ? handleBack() : navigation.canGoBack() ? navigation.goBack() : navigation.replace('Home')}
                 style={styles.backBtn}
               >
                 <ArrowLeft size={20} color="rgba(255,255,255,0.6)" />
@@ -533,7 +533,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
 
             <View style={styles.signInRow}>
               <Text style={styles.signInText}>Already have an account?</Text>
-              <TouchableOpacity onPress={() => navigation.goBack()}>
+              <TouchableOpacity onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.replace('Home')}>
                 <Text style={styles.signInLink}>Sign In</Text>
               </TouchableOpacity>
             </View>
