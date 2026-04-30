@@ -6,7 +6,9 @@ import {
   ScreenBackground,
   ScreenHeader,
   GlassCard,
+  NeuCard,
   Input,
+  NeuInput,
   Chip,
   PrimaryButton,
   Typography,
@@ -125,12 +127,12 @@ export default function RequirementScreen() {
 
       <ScrollView contentContainerStyle={{ padding: SPACING.base, paddingBottom: SPACING['4xl'] }}>
         <FadeInView delay={60}>
-          <GlassCard style={{ marginBottom: SPACING.base }}>
+          <NeuCard style={{ marginBottom: SPACING.base }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.md }}>
               <MapPin size={18} color={BRAND[600]} />
               <Text style={[TYPE.h4, { marginLeft: SPACING.sm }]}>Where is the event?</Text>
             </View>
-            <Input
+            <NeuInput
               placeholder="Event address or landmark"
               value={address}
               onChangeText={(t) => {
@@ -139,11 +141,11 @@ export default function RequirementScreen() {
               }}
               containerStyle={{ marginBottom: SPACING.sm }}
             />
-            <Input placeholder="City" value={city} onChangeText={setCity} />
+            <NeuInput placeholder="City" value={city} onChangeText={setCity} />
             <Text style={[TYPE.caption, { color: TEXT.tertiary, marginTop: SPACING.sm }]}>
               Free geocoding via OpenStreetMap. We use your city to find vendors within 5-10 km.
             </Text>
-          </GlassCard>
+          </NeuCard>
         </FadeInView>
 
         <SlideUpView delay={120}>

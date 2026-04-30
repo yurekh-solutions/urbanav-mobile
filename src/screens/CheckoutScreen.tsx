@@ -24,7 +24,9 @@ import {
 import {
   ScreenBackground,
   GlassCard,
+  NeuCard,
   Input,
+  NeuInput,
   PrimaryButton,
   GhostButton,
   Badge,
@@ -188,14 +190,14 @@ export default function CheckoutScreen({ navigation }: any) {
 
           {/* Delivery info */}
           <SlideUpView delay={120}>
-            <GlassCard style={{ marginBottom: SPACING.base }}>
+            <NeuCard style={{ marginBottom: SPACING.base }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.md }}>
                 <MapPin size={18} color={NEON.glow} />
                 <Text style={[TYPE.h4, { marginLeft: SPACING.sm }]}>Delivery Information</Text>
               </View>
 
-              <Input
-                label="Event Date"
+              <NeuInput
+                label="EVENT DATE"
                 placeholder="YYYY-MM-DD"
                 value={eventDate}
                 onChangeText={setEventDate}
@@ -266,8 +268,8 @@ export default function CheckoutScreen({ navigation }: any) {
                 </View>
               )}
 
-              <Input
-                label="Delivery Address"
+              <NeuInput
+                label="DELIVERY ADDRESS"
                 placeholder="Full address, landmark, city"
                 value={address}
                 onChangeText={setAddress}
@@ -275,8 +277,8 @@ export default function CheckoutScreen({ navigation }: any) {
                 containerStyle={{ marginBottom: SPACING.md }}
               />
 
-              <Input
-                label="Special Notes (Optional)"
+              <NeuInput
+                label="SPECIAL NOTES (OPTIONAL)"
                 placeholder="Setup time, access instructions..."
                 value={notes}
                 onChangeText={setNotes}
@@ -284,7 +286,7 @@ export default function CheckoutScreen({ navigation }: any) {
                 numberOfLines={3}
                 style={{ minHeight: 72, textAlignVertical: 'top' }}
               />
-            </GlassCard>
+            </NeuCard>
           </SlideUpView>
 
           {/* Payment method */}

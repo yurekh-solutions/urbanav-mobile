@@ -8,12 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
-  TextInput,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
-import { ScreenBackground, SEMANTIC, SPACING, RADIUS, NEON } from '../components/ui';
+import { ScreenBackground, SEMANTIC, SPACING, RADIUS, NEON, NeuCard, NeuInput, NeuButton, NEU, Toast } from '../components/ui';
 import { useAuthStore } from '../store';
 
 const LOGO = require('../../assets/logo.jpg');
@@ -24,110 +23,81 @@ const GLASS_BG2  = 'rgba(247, 217, 255, 0.04)';
 const GLASS_BORDER = 'rgba(247, 217, 255, 0.12)';
 const GLASS_BORDER_H = 'rgba(123, 37, 244, 0.5)';
 
-// ── Shared glass input ──────────────────────────────────────────────────
-function GlassInput({
-  label, placeholder, value, onChangeText,
-  secureTextEntry, keyboardType, autoCapitalize, rightIcon,
-}: {
-  label: string; placeholder: string; value: string;
-  onChangeText: (t: string) => void;
-  secureTextEntry?: boolean; keyboardType?: any; autoCapitalize?: any;
-  rightIcon?: React.ReactNode;
-}) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <View style={{ marginBottom: SPACING.base }}>
-      <Text style={[styles.label, focused && styles.labelFocused]}>{label.toUpperCase()}</Text>
-      <View style={[styles.inputWrap, focused && styles.inputWrapFocused]}>
-        <TextInput
-          style={styles.inputField}
-          placeholder={placeholder}
-          placeholderTextColor="rgba(247, 217, 255, 0.28)"
-          value={value}
-          onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-        />
-        {rightIcon && rightIcon}
-      </View>
-    </View>
-  );
-}
-
 // ── Login Screen ────────────────────────────────────────────────────────
 function LoginContent({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const { login, isLoading } = useAuthStore();
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const handleLogin = async () => {
     setError('');
-    if (!email || !password) { setError('Please enter your email and password.'); return; }
+    if (!email || !password) {
+      showToast('Please enter your email and password.', 'error');
+      return;
+    }
     try {
       await login(email.trim().toLowerCase(), password);
+      showToast('Login successful! Welcome back.', 'success');
     } catch {
-      setError('Invalid email or password. Please try again.');
+      showToast('Invalid email or password. Please try again.', 'error');
     }
   };
 
   return (
     <>
-      {/* Glass logo circle */}
-      <View style={styles.logoWrap}>
-        <View style={styles.glassCircle}>
-          <Image source={LOGO} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-        </View>
-      </View>
-
-      {/* Badge */}
-      <View style={styles.badge}>
-        <Text style={styles.badgeText}>AV EQUIPMENT RENTAL</Text>
-      </View>
-
       {/* Heading */}
       <Text style={styles.headingBold}>Welcome</Text>
-      <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING.xl }]}>back</Text>
+      <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING['2xl'] }]}>back</Text>
 
-      {/* Glass form card */}
-      <View style={styles.glassCard}>
-        <GlassInput
+      {/* Neumorphic form card */}
+      <NeuCard style={styles.neuCard} padding={SPACING.xl}>
+        <NeuInput
           label="Email"
           placeholder="you@example.com"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          containerStyle={{ marginBottom: SPACING.md }}
         />
-        <GlassInput
+        <NeuInput
           label="Password"
           placeholder="Your password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPw}
           rightIcon={
-            <View style={styles.eyeWrap}>
-              <TouchableOpacity onPress={() => setShowPw(!showPw)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                {showPw
-                  ? <EyeOff size={20} color="rgba(247,217,255,0.55)" />
-                  : <Eye size={20} color="rgba(247,217,255,0.55)" />}
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity onPress={() => setShowPw(!showPw)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              {showPw
+                ? <EyeOff size={20} color="rgba(247,217,255,0.6)" />
+                : <Eye size={20} color="rgba(247,217,255,0.6)" />}
+            </TouchableOpacity>
           }
+          containerStyle={{ marginBottom: SPACING.lg }}
         />
 
         {error ? (
           <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>
         ) : null}
 
-        {/* Glass sign in button */}
-        <TouchableOpacity onPress={handleLogin} disabled={isLoading} activeOpacity={0.8} style={[styles.glassBtn, isLoading && styles.glassBtnLoading]}>
-          <Text style={styles.glassBtnText}>{isLoading ? 'SIGNING IN...' : 'SIGN IN'}</Text>
-        </TouchableOpacity>
+        {/* Neumorphic sign in button */}
+        <NeuButton
+          title={isLoading ? 'SIGNING IN...' : 'SIGN IN'}
+          onPress={handleLogin}
+          disabled={isLoading}
+          fullWidth
+        />
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
@@ -135,11 +105,22 @@ function LoginContent({ navigation }: any) {
           <View style={styles.dividerLine} />
         </View>
 
-        {/* Glass outline button */}
-        <TouchableOpacity onPress={() => navigation.navigate('Register')} activeOpacity={0.8} style={styles.glassOutlineBtn}>
-          <Text style={styles.glassOutlineBtnText}>CREATE ACCOUNT</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Neumorphic outline button */}
+        <NeuButton
+          title="CREATE ACCOUNT"
+          onPress={() => navigation.navigate('Register')}
+          variant="ghost"
+          fullWidth
+        />
+      </NeuCard>
+      
+      {/* Toast notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
+      />
     </>
   );
 }
@@ -152,16 +133,32 @@ function RegisterContent({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const { register, isLoading } = useAuthStore();
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const handleRegister = async () => {
     setError('');
-    if (!name || !email || !phone || !password) { setError('Please fill in all fields.'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (!name || !email || !phone || !password) {
+      showToast('Please fill in all fields.', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.', 'error');
+      return;
+    }
     try {
       await register({ name: name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), password, role: 'buyer', userType: 'buyer' });
+      showToast('Account created successfully!', 'success');
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Registration failed. Please try again.');
+      showToast(e?.response?.data?.message || 'Registration failed. Please try again.', 'error');
     }
   };
 
@@ -187,37 +184,39 @@ function RegisterContent({ navigation }: any) {
 
       {/* Heading */}
       <Text style={styles.headingBold}>Create your</Text>
-      <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING.xl }]}>account</Text>
+      <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING['2xl'] }]}>account</Text>
 
-      {/* Glass form card */}
-      <View style={styles.glassCard}>
-        <GlassInput label="Full Name" placeholder="Your full name" value={name} onChangeText={setName} autoCapitalize="words" />
-        <GlassInput label="Email" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-        <GlassInput label="Phone" placeholder="+91 9876543210" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-        <GlassInput
+      {/* Neumorphic form card */}
+      <NeuCard style={styles.neuCard} padding={SPACING.xl}>
+        <NeuInput label="Full Name" placeholder="Your full name" value={name} onChangeText={setName} autoCapitalize="words" containerStyle={{ marginBottom: SPACING.md }} />
+        <NeuInput label="Email" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" containerStyle={{ marginBottom: SPACING.md }} />
+        <NeuInput label="Phone" placeholder="+91 9876543210" value={phone} onChangeText={setPhone} keyboardType="phone-pad" containerStyle={{ marginBottom: SPACING.lg }} />
+        <NeuInput
           label="Password"
           placeholder="Min 6 characters"
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPw}
           rightIcon={
-            <View style={styles.eyeWrap}>
-              <TouchableOpacity onPress={() => setShowPw(!showPw)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                {showPw
-                  ? <EyeOff size={20} color="rgba(247,217,255,0.55)" />
-                  : <Eye size={20} color="rgba(247,217,255,0.55)" />}
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity onPress={() => setShowPw(!showPw)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              {showPw
+                ? <EyeOff size={20} color="rgba(247,217,255,0.6)" />
+                : <Eye size={20} color="rgba(247,217,255,0.6)" />}
+            </TouchableOpacity>
           }
+          containerStyle={{ marginBottom: SPACING.lg }}
         />
 
         {error ? (
           <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View>
         ) : null}
 
-        <TouchableOpacity onPress={handleRegister} disabled={isLoading} activeOpacity={0.8} style={[styles.glassBtn, isLoading && styles.glassBtnLoading]}>
-          <Text style={styles.glassBtnText}>{isLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}</Text>
-        </TouchableOpacity>
+        <NeuButton
+          title={isLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
+          onPress={handleRegister}
+          disabled={isLoading}
+          fullWidth
+        />
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
@@ -225,10 +224,21 @@ function RegisterContent({ navigation }: any) {
           <View style={styles.dividerLine} />
         </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Login')} activeOpacity={0.8} style={styles.glassOutlineBtn}>
-          <Text style={styles.glassOutlineBtnText}>SIGN IN</Text>
-        </TouchableOpacity>
-      </View>
+        <NeuButton
+          title="SIGN IN"
+          onPress={() => navigation.navigate('Login')}
+          variant="ghost"
+          fullWidth
+        />
+      </NeuCard>
+      
+      {/* Toast notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
+      />
     </>
   );
 }
@@ -333,51 +343,18 @@ const styles = StyleSheet.create({
   },
   backText: { fontSize: 13, color: 'rgba(247, 217, 255, 0.5)', fontWeight: '500' },
 
-  // Glass card
-  glassCard: {
-    backgroundColor: GLASS_BG2,
-    borderWidth: 1, borderColor: GLASS_BORDER,
-    borderRadius: 22,
+  // Neumorphic card
+  neuCard: {
     padding: SPACING.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(123, 37, 244, 0.25)',
-    shadowColor: NEON.purple,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 6,
+    marginTop: SPACING.base,
   },
 
-  // Label
+  // Label (used for neu input)
   label: {
     fontSize: 10, fontWeight: '700', letterSpacing: 2.5,
     color: 'rgba(247, 217, 255, 0.35)', marginBottom: SPACING.xs,
   },
   labelFocused: { color: NEON.purple },
-
-  // Glass input
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: GLASS_BG,
-    borderWidth: 1, borderColor: GLASS_BORDER,
-    borderRadius: 12,
-    paddingHorizontal: SPACING.base,
-    minHeight: 50,
-  },
-  inputWrapFocused: {
-    borderColor: GLASS_BORDER_H,
-    backgroundColor: 'rgba(123, 37, 244, 0.08)',
-    shadowColor: NEON.purple,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-  inputField: {
-    flex: 1, fontSize: 15,
-    color: 'rgba(247, 217, 255, 0.9)',
-    paddingHorizontal: SPACING.base,
-    paddingVertical: 13,
-  },
 
   // Eye icon
   eyeWrap: {
@@ -393,34 +370,8 @@ const styles = StyleSheet.create({
   },
   errorText: { fontSize: 12.5, color: SEMANTIC.error, textAlign: 'center', fontWeight: '600' },
 
-  // Glass button (solid)
-  glassBtn: {
-    backgroundColor: `${NEON.purple}90`,
-    borderRadius: 12,
-    paddingVertical: 15, alignItems: 'center',
-    marginBottom: SPACING.base,
-    borderWidth: 1, borderColor: `${NEON.purple}70`,
-    shadowColor: NEON.purple,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 14,
-    elevation: 8,
-  },
-  glassBtnLoading: { opacity: 0.55 },
-  glassBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', letterSpacing: 1.2 },
-
   // Divider
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.base, marginBottom: SPACING.base },
   dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(247, 217, 255, 0.1)' },
   dividerText: { fontSize: 11, color: 'rgba(247, 217, 255, 0.25)', fontWeight: '600', letterSpacing: 0.8 },
-
-  // Glass outline button
-  glassOutlineBtn: {
-    backgroundColor: GLASS_BG,
-    borderRadius: 12,
-    borderWidth: 1, borderColor: GLASS_BORDER,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  glassOutlineBtnText: { fontSize: 14, color: '#FFFFFF', fontWeight: '700', letterSpacing: 0.5 },
 });

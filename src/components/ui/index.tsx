@@ -50,6 +50,7 @@ import {
 } from 'lucide-react-native';
 
 export * from './motion';
+export { Toast } from './Toast';
 
 // ============================================================
 // Typography
@@ -380,8 +381,9 @@ export const Input: React.FC<InputProps> = ({
       >
         {leftIcon ? <View style={{ marginRight: SPACING.sm }}>{leftIcon}</View> : null}
         <TextInput
-          style={[{ flex: 1, color: TEXT.primary, fontSize: 15, paddingVertical: SPACING.md }, style]}
+          style={[{ flex: 1, color: TEXT.primary, fontSize: 15, paddingHorizontal: SPACING.xs, paddingVertical: SPACING.md }, style]}
           placeholderTextColor={TEXT.muted}
+          numberOfLines={1}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           {...rest}
@@ -430,13 +432,14 @@ export const SearchBar: React.FC<{
   >
     <SearchIcon size={18} color={TEXT.tertiary} />
     <TextInput
-      style={{ flex: 1, color: TEXT.primary, fontSize: 15, marginLeft: SPACING.sm }}
+      style={{ flex: 1, color: TEXT.primary, fontSize: 15, marginLeft: SPACING.sm, paddingHorizontal: SPACING.xs }}
       placeholder={placeholder}
       placeholderTextColor={TEXT.muted}
       value={value}
       onChangeText={onChangeText}
       returnKeyType="search"
       onSubmitEditing={onSubmit}
+      numberOfLines={1}
     />
     {value ? (
       <TouchableOpacity onPress={() => onChangeText('')}>
@@ -886,7 +889,7 @@ export const NeuInput: React.FC<NeuInputProps> = ({
             borderRadius: RADIUS.lg,
             backgroundColor: NEU_TOKENS.bgSubtle, // pressed = inset
             paddingHorizontal: SPACING.base,
-            paddingVertical: Platform.OS === 'ios' ? SPACING.sm : 0,
+            paddingVertical: SPACING.sm,
             minHeight: 52,
             // inner dark shadow (bottom-right) — pressed look
             shadowColor: N_DARK,
@@ -907,18 +910,21 @@ export const NeuInput: React.FC<NeuInputProps> = ({
             {...rest}
             onFocus={(e) => { setFocused(true); rest.onFocus?.(e); }}
             onBlur={(e) => { setFocused(false); rest.onBlur?.(e); }}
+            numberOfLines={1}
             style={[
               TYPE.body,
               {
                 flex: 1,
                 color: TEXT.primary,
-                paddingVertical: Platform.OS === 'android' ? SPACING.sm : 0,
+                paddingHorizontal: 0,
+                paddingVertical: 0,
+                textAlignVertical: 'center',
               },
               style,
             ]}
             placeholderTextColor={TEXT.muted}
           />
-          {rightIcon ? <View style={{ marginLeft: SPACING.sm }}>{rightIcon}</View> : null}
+          {rightIcon ? <View style={{ marginLeft: SPACING.xs }}>{rightIcon}</View> : null}
         </View>
       </View>
       {errorText ? (
@@ -1081,11 +1087,13 @@ export const UnderlineInput: React.FC<UnderlineInputProps> = ({
           {...rest}
           onFocus={(e) => { setFocused(true); rest.onFocus?.(e); }}
           onBlur={(e) => { setFocused(false); rest.onBlur?.(e); }}
+          numberOfLines={1}
           style={[
             {
               flex: 1,
               color: textColor,
               fontSize: 16,
+              paddingHorizontal: SPACING.xs,
               paddingVertical: Platform.OS === 'android' ? 4 : 0,
             },
             style,
@@ -1354,6 +1362,7 @@ export const LightSearchBar: React.FC<{
         color: LIGHT_TOKENS.text,
         fontSize: 15,
         marginLeft: SPACING.sm,
+        paddingHorizontal: SPACING.xs,
       }}
       placeholder={placeholder}
       placeholderTextColor={LIGHT_TOKENS.textMuted}
@@ -1361,6 +1370,7 @@ export const LightSearchBar: React.FC<{
       onChangeText={onChangeText}
       returnKeyType="search"
       onSubmitEditing={onSubmit}
+      numberOfLines={1}
     />
     {value ? (
       <TouchableOpacity onPress={() => onChangeText('')}>

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ArrowLeft, User, Mail, Phone, MapPin, Lock, Check, ArrowRight, ShoppingBag } from 'lucide-react-native';
-import { ScreenBackground, SPACING, RADIUS } from '../components/ui';
+import { ScreenBackground, SPACING, RADIUS, NeuCard, NeuInput, NeuButton, NEU, Toast } from '../components/ui';
 import { useAuthStore } from '../store';
 
 const LOGO = require('../../assets/logo.jpg');
@@ -243,12 +243,22 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [globalError, setGlobalError] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const { register, isLoading } = useAuthStore();
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
+    address: '',
     city: '',
     state: '',
     password: '',
@@ -269,6 +279,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         form.name.trim().length >= 2 &&
         validEmail &&
         validPhone &&
+        form.address.trim().length >= 5 &&
         form.city.trim().length >= 2 &&
         form.state.trim().length >= 2
       );
@@ -282,11 +293,11 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const handleSubmit = async () => {
     setGlobalError('');
     if (form.password.length < 6) {
-      setGlobalError('Password must be at least 6 characters.');
+      showToast('Password must be at least 6 characters.', 'error');
       return;
     }
     if (form.password !== form.confirmPassword) {
-      setGlobalError('Passwords do not match.');
+      showToast('Passwords do not match.', 'error');
       return;
     }
     try {
@@ -297,95 +308,122 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         password: form.password,
         role: 'buyer',
         userType: 'buyer',
+        address: form.address.trim(),
         city: form.city.trim(),
         state: form.state.trim(),
       });
+      showToast('Account created successfully!', 'success');
     } catch (e: any) {
-      setGlobalError(e?.response?.data?.message || 'Registration failed. Please try again.');
+      showToast(e?.response?.data?.message || 'Registration failed. Please try again.', 'error');
     }
   };
 
   const renderStep1 = () => (
     <>
       <Text style={styles.sectionTitle}>Personal Information</Text>
-      <Input
+      <NeuInput
         label="Full Name"
         placeholder="Enter your name"
         value={form.name}
         onChangeText={(v) => updateForm('name', v)}
-        icon={User}
+        leftIcon={<User size={18} color="rgba(255,255,255,0.5)" />}
         autoCapitalize="words"
+        containerStyle={{ marginBottom: SPACING.md }}
       />
-      <Input
+      <NeuInput
         label="Email"
         placeholder="you@example.com"
         value={form.email}
         onChangeText={(v) => updateForm('email', v)}
-        icon={Mail}
+        leftIcon={<Mail size={18} color="rgba(255,255,255,0.5)" />}
         keyboardType="email-address"
         autoCapitalize="none"
-        error={form.email.length > 0 && !validEmail ? 'Invalid email' : undefined}
+        errorText={form.email.length > 0 && !validEmail ? 'Invalid email' : undefined}
+        containerStyle={{ marginBottom: SPACING.md }}
       />
-      <Input
+      <NeuInput
         label="Phone"
         placeholder="9876543210"
         value={form.phone}
         onChangeText={(v) => updateForm('phone', v)}
-        icon={Phone}
+        leftIcon={<Phone size={18} color="rgba(255,255,255,0.5)" />}
         keyboardType="phone-pad"
-        prefix="+91 "
-        error={form.phone.length >= 10 && !validPhone ? 'Invalid phone' : undefined}
+        errorText={form.phone.length >= 10 && !validPhone ? 'Invalid phone' : undefined}
+        containerStyle={{ marginBottom: SPACING.md }}
       />
       <View style={styles.row}>
         <View style={styles.half}>
-          <Input
+          <NeuInput
             label="City"
             placeholder="Mumbai"
             value={form.city}
             onChangeText={(v) => updateForm('city', v)}
-            icon={MapPin}
+            leftIcon={<MapPin size={18} color="rgba(255,255,255,0.5)" />}
             autoCapitalize="words"
           />
         </View>
         <View style={styles.half}>
-          <Input
+          <NeuInput
             label="State"
-            placeholder="Maharashtra"
+            placeholder="Mahar..."
             value={form.state}
             onChangeText={(v) => updateForm('state', v)}
-            icon={MapPin}
+            leftIcon={<MapPin size={18} color="rgba(255,255,255,0.5)" />}
             autoCapitalize="words"
           />
         </View>
       </View>
+      <NeuInput
+        label="Address"
+        placeholder="Street address, area"
+        value={form.address}
+        onChangeText={(v) => updateForm('address', v)}
+        leftIcon={<MapPin size={18} color="rgba(255,255,255,0.5)" />}
+        autoCapitalize="words"
+        containerStyle={{ marginTop: SPACING.md }}
+      />
     </>
   );
 
   const renderStep2 = () => (
     <>
       <Text style={styles.sectionTitle}>Secure Your Account</Text>
-      <Input
+      <NeuInput
         label="Password"
         placeholder="Min 6 characters"
         value={form.password}
         onChangeText={(v) => updateForm('password', v)}
-        icon={Lock}
-        secureTextEntry
-        showPasswordToggle
-        showPassword={showPassword}
-        onTogglePassword={() => setShowPassword(!showPassword)}
+        leftIcon={<Lock size={18} color="rgba(255,255,255,0.5)" />}
+        secureTextEntry={!showPassword}
+        rightIcon={
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            {showPassword ? (
+              <EyeOff size={20} color="rgba(255,255,255,0.5)" />
+            ) : (
+              <Eye size={20} color="rgba(255,255,255,0.5)" />
+            )}
+          </TouchableOpacity>
+        }
+        containerStyle={{ marginBottom: SPACING.md }}
       />
-      <Input
+      <NeuInput
         label="Confirm Password"
         placeholder="Re-enter password"
         value={form.confirmPassword}
         onChangeText={(v) => updateForm('confirmPassword', v)}
-        icon={Lock}
-        secureTextEntry
-        showPasswordToggle
-        showPassword={showConfirm}
-        onTogglePassword={() => setShowConfirm(!showConfirm)}
-        error={form.confirmPassword.length > 0 && form.password !== form.confirmPassword ? 'Passwords do not match' : undefined}
+        leftIcon={<Lock size={18} color="rgba(255,255,255,0.5)" />}
+        secureTextEntry={!showConfirm}
+        rightIcon={
+          <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            {showConfirm ? (
+              <EyeOff size={20} color="rgba(255,255,255,0.5)" />
+            ) : (
+              <Eye size={20} color="rgba(255,255,255,0.5)" />
+            )}
+          </TouchableOpacity>
+        }
+        errorText={form.confirmPassword.length > 0 && form.password !== form.confirmPassword ? 'Passwords do not match' : undefined}
+        containerStyle={{ marginBottom: SPACING.base }}
       />
 
       <View style={styles.strengthBar}>
@@ -410,6 +448,14 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Email:</Text>
           <Text style={styles.summaryValue}>{form.email}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Phone:</Text>
+          <Text style={styles.summaryValue}>{form.phone}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Address:</Text>
+          <Text style={styles.summaryValue}>{form.address}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Location:</Text>
@@ -467,25 +513,21 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
               ) : null}
 
               {currentStep === 2 ? (
-                <TouchableOpacity
-                  style={[styles.btn, !canProceed() && styles.btnDisabled]}
-                  onPress={handleSubmit}
-                  disabled={!canProceed() || isLoading}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.btnText}>{isLoading ? 'Creating...' : 'Create Account'}</Text>
-                  <ArrowRight size={18} color="#FFF" />
-                </TouchableOpacity>
+                <View style={{ marginTop: SPACING.lg }}>
+                  <NeuButton
+                    title={isLoading ? 'Creating...' : 'Create Account'}
+                    onPress={handleSubmit}
+                    disabled={!canProceed() || isLoading}
+                    rightIcon={<ArrowRight size={18} color="#FFF" />}
+                  />
+                </View>
               ) : (
-                <TouchableOpacity
-                  style={[styles.btn, !canProceed() && styles.btnDisabled]}
+                <NeuButton
+                  title="Continue"
                   onPress={handleNext}
                   disabled={!canProceed()}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.btnText}>Continue</Text>
-                  <ArrowRight size={18} color="#FFF" />
-                </TouchableOpacity>
+                  rightIcon={<ArrowRight size={18} color="#FFF" />}
+                />
               )}
             </View>
 
@@ -498,6 +540,14 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      
+      {/* Toast notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
+      />
     </ScreenBackground>
   );
 }
