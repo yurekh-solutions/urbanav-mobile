@@ -37,6 +37,10 @@
       "favicon": "./assets/logo.jpg"
     },
     "owner": "soniajaiswal",
+    "updates": {
+      "enabled": false,
+      "fallbackToCacheTimeout": 0
+    },
     "extra": {
       "eas": {
         "projectId": "8fc46744-1195-48f4-ab96-f06d924f7197"

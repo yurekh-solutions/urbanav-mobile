@@ -56,6 +56,18 @@ function LoginContent({ navigation }: any) {
 
   return (
     <>
+      {/* Glass logo circle */}
+      <View style={styles.logoWrap}>
+        <View style={styles.glassCircle}>
+          <Image source={LOGO} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+        </View>
+      </View>
+
+      {/* Badge */}
+      <View style={styles.badge}>
+        <Text style={styles.badgeText}>AV EQUIPMENT RENTAL</Text>
+      </View>
+
       {/* Heading */}
       <Text style={styles.headingBold}>Welcome</Text>
       <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING['2xl'] }]}>back</Text>
