@@ -149,7 +149,7 @@ export default function EquipmentDetailScreen({ route, navigation }: any) {
   return (
     <ScreenBackground>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
           {/* Image */}
           <View style={{ position: 'relative' }}>
             <Image

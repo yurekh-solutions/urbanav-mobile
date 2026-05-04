@@ -17,6 +17,7 @@ import {
   Pressable,
   ImageSourcePropType,
   Image,
+  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -117,12 +118,20 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     </View>
   );
 
+  // On Android, BlurView is limited — use a more opaque background so the card
+  // has clear contrast instead of looking washed-out against the app gradient.
+  const androidBg =
+    tier === 'tier1' ? 'rgba(29, 10, 46, 0.82)'
+    : tier === 'tier2' ? 'rgba(45, 20, 70, 0.78)'
+    : 'rgba(60, 30, 95, 0.72)';
+  const effectiveBg = Platform.OS === 'ios' ? bg : androidBg;
+
   const wrapperStyle: StyleProp<ViewStyle> = [
     {
       borderRadius: radius,
       borderWidth: 1,
       borderColor: border,
-      backgroundColor: bg,
+      backgroundColor: effectiveBg,
       shadowColor: NEON.purple,
       shadowOffset: { width: 0, height: 10 },
       shadowOpacity: 0.35,
@@ -469,10 +478,17 @@ export const Chip: React.FC<ChipProps> = ({ label, selected, onPress, icon }) =>
         shadowOpacity: selected ? 0.5 : 0,
         shadowRadius: selected ? 10 : 0,
         shadowOffset: { width: 0, height: 0 },
+        maxWidth: '100%',
       }}
     >
       {icon ? <View style={{ marginRight: SPACING.xs }}>{icon}</View> : null}
-      <Text style={[TYPE.label, { color: selected ? '#FFF' : TEXT.secondary }]}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        style={[TYPE.label, { color: selected ? '#FFF' : TEXT.secondary, flexShrink: 1 }]}
+      >
+        {label}
+      </Text>
     </View>
   </PressableScale>
 );
@@ -572,7 +588,18 @@ export const ScreenHeader: React.FC<{
   right?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }> = ({ title, subtitle, onBack, right, style }) => (
-  <View style={[{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.base, paddingTop: SPACING.base, paddingBottom: SPACING.sm }, style]}>
+  <View
+    style={[
+      {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: SPACING.base,
+        paddingTop: (Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 44) + SPACING.sm,
+        paddingBottom: SPACING.sm,
+      },
+      style,
+    ]}
+  >
     {onBack ? (
       <IconButton icon={<ChevronLeft size={22} color={TEXT.primary} />} onPress={onBack} size={40} />
     ) : (

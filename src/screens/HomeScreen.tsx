@@ -91,7 +91,7 @@ export default function HomeScreen({ navigation }: any) {
     <LightScreenBackground>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl

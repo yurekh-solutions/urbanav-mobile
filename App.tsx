@@ -2,12 +2,13 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, ActivityIndicator, View, Platform } from 'react-native';
+import { Text, ActivityIndicator, View, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Home, Grid3x3, ShoppingCart, Package, User, Plus } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+import ErrorBoundary from 'react-native-error-boundary';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
@@ -43,6 +44,7 @@ const Tab = createBottomTabNavigator();
 function BuyerTabs() {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -52,7 +54,6 @@ function BuyerTabs() {
           height: LAYOUT.tabBarHeight,
           paddingBottom: 10,
           paddingTop: 10,
-          position: 'absolute',
           shadowColor: NEON.purple,
           shadowOffset: { width: 0, height: -8 },
           shadowOpacity: 0.4,
@@ -155,6 +156,7 @@ function BuyerTabs() {
 
 export default function App() {
   const { isAuthenticated, isLoading, isGuest, hasOnboarded, checkAuth } = useAuthStore();
+  const navigationRef = React.useRef<any>(null);
 
   useEffect(() => {
     checkAuth();
@@ -167,6 +169,18 @@ export default function App() {
     return () => backHandler.remove();
   }, []);
 
+  useEffect(() => {
+    if (!isLoading && navigationRef.current) {
+      const routeName = !hasOnboarded ? 'Onboarding' :
+        (!isAuthenticated && !isGuest) ? 'Login' : 'Main';
+
+      navigationRef.current.reset({
+        index: 0,
+        routes: [{ name: routeName }],
+      });
+    }
+  }, [isLoading, hasOnboarded, isAuthenticated, isGuest]);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: SURFACE.base }}>
@@ -177,52 +191,91 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: SURFACE.base }}>
-      <StatusBar style="light" />
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            animation: 'slide_from_right',
-            gestureEnabled: true,
-            gestureDirection: 'horizontal',
-            contentStyle: { backgroundColor: SURFACE.base },
-          }}
-        >
-          {!hasOnboarded ? (
-            <>
-              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-            </>
-          ) : !isAuthenticated && !isGuest ? (
-            <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen name="Main" component={BuyerTabs} />
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="EquipmentDetail" component={EquipmentDetailScreen} />
-              <Stack.Screen name="Chat" component={ChatScreen} />
-              <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
-              <Stack.Screen name="Checkout" component={CheckoutScreen} />
-              <Stack.Screen name="CategoryDetail" component={CategoriesScreen} />
-              <Stack.Screen name="Cart" component={CartScreen} />
-              <Stack.Screen name="MatchResults" component={MatchResultsScreen} />
-              <Stack.Screen name="Inquiry" component={InquiryScreen} />
-              <Stack.Screen name="BookingConfirm" component={BookingConfirmScreen} options={{ animation: 'slide_from_bottom' }} />
-              <Stack.Screen name="Addresses" component={AddressesScreen} />
-              <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
-              <Stack.Screen name="Notifications" component={NotificationsScreen} />
-              <Stack.Screen name="Terms" component={TermsScreen} />
-              <Stack.Screen name="Privacy" component={PrivacyScreen} />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <ErrorBoundary
+      onError={(error: Error, errorInfo: any) => {
+        console.error('App Error:', error, errorInfo);
+      }}
+      FallbackComponent={({ error, resetError }: any) => (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Something went wrong</Text>
+          <Text style={styles.errorMessage}>{error?.message || 'Unknown error'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={resetError}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    >
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: SURFACE.base }}>
+        <StatusBar style="light" />
+        <NavigationContainer ref={navigationRef}>
+          <Stack.Navigator
+            initialRouteName={
+              !hasOnboarded ? 'Onboarding' :
+              (!isAuthenticated && !isGuest) ? 'Login' :
+              'Main'
+            }
+            screenOptions={{
+              headerShown: false,
+              animation: 'slide_from_right',
+              gestureEnabled: true,
+              gestureDirection: 'horizontal',
+              contentStyle: { backgroundColor: SURFACE.base },
+            }}
+          >
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="Main" component={BuyerTabs} />
+            <Stack.Screen name="EquipmentDetail" component={EquipmentDetailScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen name="CategoryDetail" component={CategoriesScreen} />
+            <Stack.Screen name="Cart" component={CartScreen} />
+            <Stack.Screen name="MatchResults" component={MatchResultsScreen} />
+            <Stack.Screen name="Inquiry" component={InquiryScreen} />
+            <Stack.Screen name="BookingConfirm" component={BookingConfirmScreen} options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="Addresses" component={AddressesScreen} />
+            <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Terms" component={TermsScreen} />
+            <Stack.Screen name="Privacy" component={PrivacyScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    backgroundColor: SURFACE.base,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: TEXT.primary,
+    marginBottom: 12,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: TEXT.secondary,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: NEON.purple,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

@@ -126,7 +126,7 @@ export default function CategoriesScreen({ route, navigation }: any) {
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingBottom: 24 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

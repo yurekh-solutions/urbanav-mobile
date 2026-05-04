@@ -236,7 +236,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
           onBack={() => navigation.goBack()}
         />
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: SPACING.base, paddingBottom: 32 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: SPACING.base, paddingBottom: 24 }}>
 
           {/* Status timeline */}
           <SlideUpView delay={0}>

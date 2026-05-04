@@ -211,7 +211,7 @@ export default function OrdersScreen({ navigation }: any) {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{
               padding: SPACING.base,
-              paddingBottom: 120,
+              paddingBottom: 24,
               gap: SPACING.sm,
             }}
             refreshControl={

@@ -34,6 +34,8 @@ api.interceptors.request.use(async (config) => {
 export const authAPI = {
   register: (data: any) => api.post('/auth/register', data),
   login: (data: any) => api.post('/auth/login', data),
+  google: (data: { idToken: string; userType?: 'buyer' | 'supplier' }) =>
+    api.post('/auth/google', data),
   forgotPassword: (data: any) => api.post('/auth/forgot-password', data),
   verifyOTP: (data: any) => api.post('/auth/verify-otp', data),
   getMe: () => api.get('/auth/me'),
@@ -56,7 +58,7 @@ export const ordersAPI = {
   getSupplierOrders: () => api.get('/orders/supplier'),
   updateStatus: (id: string, data: any) => api.put(`/orders/${id}/status`, data),
   cancel: (id: string) => api.put(`/orders/${id}/cancel`),
-  processPayment: (id: string, data: any) => api.post(`/orders/${id}/pay`, data),
+  processPayment: (id: string, data: any) => api.put(`/orders/${id}/pay`, data),
 };
 
 export const chatAPI = {

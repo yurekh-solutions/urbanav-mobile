@@ -13,9 +13,13 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Eye, EyeOff, ArrowLeft, User, Mail, Phone, MapPin, Lock, Check, ArrowRight, ShoppingBag } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Eye, EyeOff, ArrowLeft, User, Mail, Phone, MapPin, Lock, Check, ArrowRight, ShoppingBag, Camera, Hash } from 'lucide-react-native';
 import { ScreenBackground, SPACING, RADIUS, NeuCard, NeuInput, NeuButton, NEU, Toast } from '../components/ui';
 import { useAuthStore } from '../store';
+import { uploadAPI } from '../api';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
+import { GoogleLogo } from '../components/GoogleLogo';
 
 const LOGO = require('../../assets/logo.jpg');
 
@@ -182,7 +186,7 @@ function Input({
         )}
         {prefix && <Text style={inp.prefix}>{prefix}</Text>}
         <TextInput
-          style={[inp.input, prefix && inp.inputWithPrefix]}
+          style={[inp.input, prefix ? inp.inputWithPrefix : null]}
           placeholder={placeholder}
           placeholderTextColor="rgba(255,255,255,0.25)"
           value={value}
@@ -247,6 +251,21 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const { register, isLoading } = useAuthStore();
+  const googleLogin = useAuthStore((s) => s.googleLogin);
+
+  const {
+    promptAsync: promptGoogle,
+    ready: googleReady,
+    notConfigured: googleNotConfigured,
+    unsupportedRuntime: googleUnsupported,
+  } = useGoogleAuth(async (idToken) => {
+    try {
+      await googleLogin(idToken, 'buyer');
+      showToast('Signed in with Google!', 'success');
+    } catch (e: any) {
+      showToast(e?.response?.data?.message || 'Google sign-in failed.', 'error');
+    }
+  });
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
@@ -261,9 +280,68 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
     address: '',
     city: '',
     state: '',
+    pincode: '',
     password: '',
     confirmPassword: '',
   });
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+  const pickImage = async (fromCamera: boolean) => {
+    try {
+      if (fromCamera) {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) {
+          showToast('Camera permission denied', 'error');
+          return;
+        }
+        const res = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        });
+        if (!res.canceled && res.assets?.[0]?.uri) setAvatarUri(res.assets[0].uri);
+      } else {
+        const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!perm.granted) {
+          showToast('Gallery permission denied', 'error');
+          return;
+        }
+        const res = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.7,
+        });
+        if (!res.canceled && res.assets?.[0]?.uri) setAvatarUri(res.assets[0].uri);
+      }
+    } catch (e: any) {
+      showToast(e?.message || 'Could not pick image', 'error');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (googleNotConfigured) {
+      showToast('Google Sign-In is not configured yet.', 'info');
+      return;
+    }
+    if (googleUnsupported) {
+      showToast(
+        'Google Sign-In is not available in Expo Go. Install the development APK.',
+        'info'
+      );
+      return;
+    }
+    if (!googleReady) {
+      showToast('Preparing Google Sign-In…', 'info');
+      return;
+    }
+    try {
+      await promptGoogle();
+    } catch (e: any) {
+      showToast('Could not open Google sign-in.', 'error');
+    }
+  };
 
   const updateForm = (key: string, value: string) => {
     setForm((prev: typeof form) => ({ ...prev, [key]: value }));
@@ -272,6 +350,7 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
 
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const validPhone = /^\+?[0-9]{10,13}$/.test(form.phone.replace(/[\s-]/g, ''));
+  const validPincode = /^[0-9]{6}$/.test(form.pincode.trim());
 
   const canProceed = () => {
     if (currentStep === 1) {
@@ -281,7 +360,8 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         validPhone &&
         form.address.trim().length >= 5 &&
         form.city.trim().length >= 2 &&
-        form.state.trim().length >= 2
+        form.state.trim().length >= 2 &&
+        validPincode
       );
     }
     return form.password.length >= 6 && form.password === form.confirmPassword;
@@ -300,6 +380,10 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
       showToast('Passwords do not match.', 'error');
       return;
     }
+    if (!validPincode) {
+      showToast('Please enter a valid 6-digit pincode.', 'error');
+      return;
+    }
     try {
       await register({
         name: form.name.trim(),
@@ -308,10 +392,19 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         password: form.password,
         role: 'buyer',
         userType: 'buyer',
-        address: form.address.trim(),
+        street: form.address.trim(),
         city: form.city.trim(),
         state: form.state.trim(),
+        pincode: form.pincode.trim(),
       });
+      // Best-effort avatar upload after account creation (non-blocking for UX).
+      if (avatarUri) {
+        try {
+          await uploadAPI.avatar(avatarUri);
+        } catch {
+          // Silent — user can re-upload from profile later.
+        }
+      }
       showToast('Account created successfully!', 'success');
     } catch (e: any) {
       showToast(e?.response?.data?.message || 'Registration failed. Please try again.', 'error');
@@ -321,6 +414,29 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const renderStep1 = () => (
     <>
       <Text style={styles.sectionTitle}>Personal Information</Text>
+
+      {/* Profile Photo Picker */}
+      <View style={styles.avatarWrap}>
+        <TouchableOpacity onPress={() => pickImage(false)} activeOpacity={0.85} style={styles.avatarCircle}>
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatarImg} resizeMode="cover" />
+          ) : (
+            <Camera size={28} color="rgba(255,255,255,0.5)" />
+          )}
+        </TouchableOpacity>
+        <View style={styles.avatarActions}>
+          <TouchableOpacity style={styles.avatarActionBtn} onPress={() => pickImage(false)}>
+            <Text style={styles.avatarActionText}>📷 Gallery</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.avatarActionBtn} onPress={() => pickImage(true)}>
+            <Text style={styles.avatarActionText}>📸 Camera</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.avatarHint}>
+          {avatarUri ? 'Tap circle to change' : 'Tap circle or choose below'}
+        </Text>
+      </View>
+
       <NeuInput
         label="Full Name"
         placeholder="Enter your name"
@@ -374,6 +490,16 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         </View>
       </View>
       <NeuInput
+        label="Pincode"
+        placeholder="6-digit pincode"
+        value={form.pincode}
+        onChangeText={(v) => updateForm('pincode', v.replace(/[^0-9]/g, '').slice(0, 6))}
+        leftIcon={<Hash size={18} color="rgba(255,255,255,0.5)" />}
+        keyboardType="number-pad"
+        errorText={form.pincode.length > 0 && !validPincode ? 'Enter valid 6-digit pincode' : undefined}
+        containerStyle={{ marginTop: SPACING.md }}
+      />
+      <NeuInput
         label="Address"
         placeholder="Street address, area"
         value={form.address}
@@ -382,6 +508,21 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         autoCapitalize="words"
         containerStyle={{ marginTop: SPACING.md }}
       />
+
+      {/* Divider + Google Sign-In */}
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>OR</Text>
+        <View style={styles.dividerLine} />
+      </View>
+      <TouchableOpacity
+        style={styles.googleBtn}
+        onPress={handleGoogleSignIn}
+        activeOpacity={0.8}
+      >
+        <GoogleLogo size={22} />
+        <Text style={styles.googleText}>Continue with Google</Text>
+      </TouchableOpacity>
     </>
   );
 
@@ -522,12 +663,14 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
                   />
                 </View>
               ) : (
-                <NeuButton
-                  title="Continue"
-                  onPress={handleNext}
-                  disabled={!canProceed()}
-                  rightIcon={<ArrowRight size={18} color="#FFF" />}
-                />
+                <View style={{ marginTop: 5 }}>
+                  <NeuButton
+                    title="Continue"
+                    onPress={handleNext}
+                    disabled={!canProceed()}
+                    rightIcon={<ArrowRight size={18} color="#FFF" />}
+                  />
+                </View>
               )}
             </View>
 
@@ -698,4 +841,87 @@ const styles = StyleSheet.create({
   },
   signInText: { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
   signInLink: { color: PURPLE, fontSize: 14, fontWeight: '600' },
+  // Profile photo picker
+  avatarWrap: { alignItems: 'center', marginBottom: SPACING.lg },
+  avatarCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 2,
+    borderColor: 'rgba(123, 37, 244, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImg: { width: '100%', height: '100%' },
+  avatarHint: {
+    marginTop: 8,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.45)',
+  },
+  avatarActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  avatarActionBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: RADIUS.full,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  avatarActionText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '600',
+  },
+  // Divider + Google
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.base,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dividerText: {
+    marginHorizontal: SPACING.sm,
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#FFF',
+    paddingVertical: 13,
+    borderRadius: RADIUS.lg,
+    marginBottom: 16,
+  },
+  googleIconWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleG: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#4285F4',
+  },
+  googleText: {
+    color: '#1F1F1F',
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });

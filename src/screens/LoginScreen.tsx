@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ArrowLeft, Mail, Lock } from 'lucide-react-native';
 import { ScreenBackground, SEMANTIC, SPACING, RADIUS, NEON, NEU, NeuCard, NeuInput, NeuButton, Toast } from '../components/ui';
 import { useAuthStore } from '../store';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
+import { GoogleLogo } from '../components/GoogleLogo';
 
 const LOGO = require('../../assets/logo.jpg');
 
@@ -33,11 +35,49 @@ function LoginContent({ navigation }: any) {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const { login, isLoading } = useAuthStore();
+  const googleLogin = useAuthStore((s) => s.googleLogin);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
+  };
+
+  const {
+    promptAsync: promptGoogle,
+    ready: googleReady,
+    notConfigured: googleNotConfigured,
+    unsupportedRuntime: googleUnsupported,
+  } = useGoogleAuth(async (idToken) => {
+    try {
+      await googleLogin(idToken, 'buyer');
+      showToast('Signed in with Google!', 'success');
+    } catch (e: any) {
+      showToast(e?.response?.data?.message || 'Google sign-in failed.', 'error');
+    }
+  });
+
+  const handleGoogleSignIn = async () => {
+    if (googleNotConfigured) {
+      showToast('Google Sign-In is not configured yet.', 'info');
+      return;
+    }
+    if (googleUnsupported) {
+      showToast(
+        'Google Sign-In is not available in Expo Go. Install the development APK.',
+        'info'
+      );
+      return;
+    }
+    if (!googleReady) {
+      showToast('Preparing Google Sign-In…', 'info');
+      return;
+    }
+    try {
+      await promptGoogle();
+    } catch {
+      showToast('Could not open Google sign-in.', 'error');
+    }
   };
 
   const handleLogin = async () => {
@@ -69,8 +109,8 @@ function LoginContent({ navigation }: any) {
       </View>
 
       {/* Heading */}
-      <Text style={styles.headingBold}>Welcome</Text>
-      <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING['2xl'] }]}>back</Text>
+      <Text style={styles.title}>Welcome Back</Text>
+      <Text style={styles.subtitle}>Sign in to your account</Text>
 
       {/* Neumorphic form card */}
       <View style={styles.neuCard}>
@@ -106,7 +146,7 @@ function LoginContent({ navigation }: any) {
         ) : null}
 
         {/* Neumorphic sign in button */}
-        <View style={{ marginBottom: SPACING.lg }}>
+        <View style={styles.signInWrap}>
           <NeuButton
             title={isLoading ? 'SIGNING IN...' : 'SIGN IN'}
             onPress={handleLogin}
@@ -115,6 +155,17 @@ function LoginContent({ navigation }: any) {
           />
         </View>
 
+        {/* Google Sign-In */}
+        <TouchableOpacity
+          style={styles.googleBtn}
+          onPress={handleGoogleSignIn}
+          activeOpacity={0.8}
+        >
+          <GoogleLogo size={22} />
+          <Text style={styles.googleText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        {/* Divider */}
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>NEW TO URBANAV?</Text>
@@ -122,12 +173,14 @@ function LoginContent({ navigation }: any) {
         </View>
 
         {/* Neumorphic outline button */}
-        <NeuButton
-          title="CREATE ACCOUNT"
-          onPress={() => navigation.navigate('Register')}
-          variant="ghost"
-          fullWidth
-        />
+        <View style={styles.createAccountWrap}>
+          <NeuButton
+            title="CREATE ACCOUNT"
+            onPress={() => navigation.navigate('Register')}
+            variant="ghost"
+            fullWidth
+          />
+        </View>
       </View>
       
       {/* Toast notification */}
@@ -199,8 +252,8 @@ function RegisterContent({ navigation }: any) {
       </View>
 
       {/* Heading */}
-      <Text style={styles.headingBold}>Create your</Text>
-      <Text style={[styles.headingBold, styles.headingLight, { marginBottom: SPACING['2xl'] }]}>account</Text>
+      <Text style={styles.title}>Create your</Text>
+      <Text style={[styles.title, { fontWeight: '300' as const, marginBottom: SPACING['2xl'] }]}>account</Text>
 
       {/* Neumorphic form card */}
       <NeuCard style={styles.neuCard} padding={SPACING.xl}>
@@ -346,11 +399,21 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 9, fontWeight: '700', letterSpacing: 2.5, color: NEON.purple },
 
   // Heading
-  headingBold: {
-    fontSize: 34, fontWeight: '800', color: '#FFFFFF',
-    letterSpacing: -0.5, lineHeight: 42, textAlign: 'center',
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 4,
+    letterSpacing: -0.3,
   },
-  headingLight: { fontWeight: '300' },
+  subtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    marginBottom: SPACING.xl,
+    fontWeight: '500',
+  },
 
   // Back
   backRow: {
@@ -396,8 +459,49 @@ const styles = StyleSheet.create({
   },
   errorText: { fontSize: 12.5, color: SEMANTIC.error, textAlign: 'center', fontWeight: '600' },
 
+  // Sign In button wrapper
+  signInWrap: {
+    marginBottom: SPACING.md,
+  },
+
+  // Create Account button wrapper
+  createAccountWrap: {
+    marginTop: SPACING.sm,
+    marginBottom: 0,
+  },
+
   // Divider
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.base, marginBottom: SPACING.base },
+  dividerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.base,
+    marginBottom: SPACING.base,
+    marginTop: SPACING.xs,
+  },
   dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(247, 217, 255, 0.1)' },
   dividerText: { fontSize: 11, color: 'rgba(247, 217, 255, 0.25)', fontWeight: '600', letterSpacing: 0.8 },
+
+  // Google Sign-In
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: RADIUS.xl,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  googleText: {
+    color: 'rgba(0,0,0,0.7)',
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
 });

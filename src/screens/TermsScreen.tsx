@@ -119,7 +119,7 @@ export default function TermsScreen({ navigation }: any) {
         <ScrollView
           contentContainerStyle={{
             paddingHorizontal: SPACING.base,
-            paddingBottom: 120,
+            paddingBottom: 24,
           }}
           showsVerticalScrollIndicator={false}
         >

@@ -157,7 +157,7 @@ export default function CheckoutScreen({ navigation }: any) {
         </FadeInView>
 
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: SPACING.base, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: SPACING.base, paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Order summary */}

@@ -233,9 +233,10 @@ export default function RequirementScreen() {
             </View>
 
             <View style={{ marginTop: SPACING.md }}>
-              <Text style={[TYPE.label, { color: TEXT.secondary, marginBottom: SPACING.xs }]}>
-                <Wallet size={14} color={TEXT.secondary} />  Budget
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.xs }}>
+                <Wallet size={14} color={TEXT.secondary} />
+                <Text style={[TYPE.label, { color: TEXT.secondary, marginLeft: 6 }]}>Budget</Text>
+              </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {BUDGET_BANDS.map((b) => (
                   <Chip key={b} label={b} selected={budget === b} onPress={() => setBudget(b)} />

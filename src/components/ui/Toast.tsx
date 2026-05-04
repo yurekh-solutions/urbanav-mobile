@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, Platform, StatusBar } from 'react-native';
 import { Check, AlertCircle, Info } from 'lucide-react-native';
 import { SPACING, RADIUS } from '../../theme/spacing';
 import { TYPE } from '../../theme/typography';
@@ -134,7 +134,7 @@ export const Toast: React.FC<ToastProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 50,
+    top: Platform.OS === 'android' ? (StatusBar.currentHeight || 44) + 8 : 50,
     left: 0,
     right: 0,
     alignItems: 'center',

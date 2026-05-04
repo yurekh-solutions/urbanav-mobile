@@ -13,6 +13,7 @@ interface AuthState {
   preferredRole: 'buyer' | 'supplier' | null;
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
+  googleLogin: (idToken: string, userType?: 'buyer' | 'supplier') => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   completeOnboarding: (role?: 'buyer' | 'supplier' | null) => Promise<void>;
@@ -98,7 +99,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw error;
     }
   },
-  
+
+  googleLogin: async (idToken: string, userType: 'buyer' | 'supplier' = 'buyer') => {
+    set({ isLoading: true });
+    try {
+      const res = await authAPI.google({ idToken, userType });
+      const d: any = res.data || {};
+      const user = d.user ?? d;
+      const token = d.token ?? d.accessToken ?? 'mock-token';
+
+      await AsyncStorage.multiSet([
+        ['@urbanav_user', JSON.stringify(user)],
+        ['@urbanav_token', token],
+        ['@urbanav_authenticated', 'true'],
+        ['@urbanav_onboarded', 'true'],
+      ]);
+
+      set({ user, token, isAuthenticated: true, isGuest: false, hasOnboarded: true, isLoading: false });
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
   logout: async () => {
     // Clear auth but KEEP onboarding flag so returning users don't re-see it.
     await AsyncStorage.multiRemove([
