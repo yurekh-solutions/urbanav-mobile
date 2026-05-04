@@ -12,10 +12,11 @@ WebBrowser.maybeCompleteAuthSession();
 // - ANDROID: registered with package `com.urbanav.app` + SHA-1 fingerprint.
 // - IOS:     registered with bundle id `com.urbanav.app` + URL scheme.
 // - EXPO:    web-type client used only when running inside Expo Go (proxy).
-const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB || '';
-const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID || '';
-const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS || '';
-const EXPO_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_EXPO || WEB_CLIENT_ID;
+const extra = Constants.expoConfig?.extra || {};
+const WEB_CLIENT_ID = extra.googleClientIdWeb || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB || '';
+const ANDROID_CLIENT_ID = extra.googleClientIdAndroid || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID || '';
+const IOS_CLIENT_ID = extra.googleClientIdIos || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS || '';
+const EXPO_CLIENT_ID = extra.googleClientIdExpo || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_EXPO || WEB_CLIENT_ID;
 
 // Detect Expo Go runtime. In Expo Go the native URL scheme / SHA-1 do not
 // match the production app, so native client IDs cannot be used; instead we

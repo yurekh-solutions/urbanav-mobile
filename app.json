@@ -45,7 +45,10 @@
     "extra": {
       "eas": {
         "projectId": "8fc46744-1195-48f4-ab96-f06d924f7197"
-      }
+      },
+      "googleClientIdAndroid": "581554507452-u6919lnm07tr86koca94cbpgrgjf2d1q.apps.googleusercontent.com",
+      "googleClientIdWeb": "581554507452-qehcq5cf41oaj3ksqtkeb5scp72ipvbi.apps.googleusercontent.com",
+      "googleClientIdExpo": "581554507452-qehcq5cf41oaj3ksqtkeb5scp72ipvbi.apps.googleusercontent.com"
     }
   }
 }
