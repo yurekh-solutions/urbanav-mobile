@@ -46,15 +46,20 @@ export function useGoogleAuth(
   //   android -> androidClientId (native intent via SHA-1 + package)
   //   ios     -> iosClientId     (native URL scheme)
   // For Expo Go (dev), fall back to the Expo proxy via a web-type clientId.
+  // Use 'not-configured' as a safe placeholder for empty client IDs.
+  // This prevents Google.useIdTokenAuthRequest() from throwing when a
+  // required clientId is empty/undefined (React hooks cannot be wrapped
+  // in try-catch or called conditionally). Auth will simply fail at
+  // prompt-time, which is handled gracefully below.
   const config: Partial<Google.GoogleAuthRequestConfig> =
     Platform.OS === 'web'
-      ? { webClientId: WEB_CLIENT_ID || undefined }
+      ? { webClientId: WEB_CLIENT_ID || 'not-configured' }
       : isExpoGo
-      ? { clientId: EXPO_CLIENT_ID || undefined }
+      ? { clientId: EXPO_CLIENT_ID || 'not-configured' }
       : {
-          webClientId: WEB_CLIENT_ID || undefined,
-          androidClientId: ANDROID_CLIENT_ID || undefined,
-          iosClientId: IOS_CLIENT_ID || undefined,
+          webClientId: WEB_CLIENT_ID || 'not-configured',
+          androidClientId: ANDROID_CLIENT_ID || 'not-configured',
+          iosClientId: IOS_CLIENT_ID || 'not-configured',
         };
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest(
