@@ -2,7 +2,7 @@
   "expo": {
     "name": "UrbanAV",
     "slug": "urbanav-mobile",
-        "scheme": "urbanav",
+    "scheme": "urbanav",
     "version": "1.0.0",
     "description": "UrbanAV — India's real-time AV rental marketplace. Post your event requirement, get matched with top vendors, book with secure advance + OTP trust layer.",
     "orientation": "portrait",
@@ -27,7 +27,8 @@
         "foregroundImage": "./assets/logo.jpg",
         "backgroundColor": "#EFEAF4"
       },
-      "package": "com.urbanav.app"
+      "package": "com.urbanav.app",
+      "versionCode": 3
     },
     "web": {
       "name": "UrbanAV — AV Rental Marketplace",

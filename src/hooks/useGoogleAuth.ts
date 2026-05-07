@@ -72,15 +72,19 @@ export function useGoogleAuth(
         (response as any).params?.id_token ||
         (response as any).authentication?.idToken;
       if (idToken) {
+        console.log('[GoogleAuth] Successfully obtained idToken, sending to backend...');
         Promise.resolve(onIdToken(idToken)).catch((err) => {
           console.error('[GoogleAuth] Backend verification failed:', err?.message || err);
+          console.error('[GoogleAuth] Full error:', JSON.stringify(err, null, 2));
         });
       } else {
-        console.error('[GoogleAuth] No idToken in response:', JSON.stringify(response));
+        console.error('[GoogleAuth] No idToken in response:', JSON.stringify(response, null, 2));
       }
     } else if (response?.type === 'error') {
       const errCode = (response as any).errorCode || '';
-      console.error('[GoogleAuth] Auth failed:', response.type, errCode);
+      const errMsg = (response as any).errorMessage || '';
+      console.error('[GoogleAuth] Auth failed:', response.type, errCode, errMsg);
+      console.error('[GoogleAuth] Full error response:', JSON.stringify(response, null, 2));
     } else if (response?.type === 'dismiss') {
       console.log('[GoogleAuth] Auth dismissed by user');
     }

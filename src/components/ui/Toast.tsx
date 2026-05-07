@@ -22,7 +22,7 @@ export const Toast: React.FC<ToastProps> = ({
   type = 'info',
   visible,
   onHide,
-  duration = 3000,
+  duration = 5000,
 }) => {
   const [slideAnim] = useState(new Animated.Value(-100));
   const [opacityAnim] = useState(new Animated.Value(0));
@@ -134,7 +134,7 @@ export const Toast: React.FC<ToastProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: Platform.OS === 'android' ? (StatusBar.currentHeight || 44) + 8 : 50,
+    top: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 8 : 50,
     left: 0,
     right: 0,
     alignItems: 'center',

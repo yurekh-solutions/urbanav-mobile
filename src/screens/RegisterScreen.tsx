@@ -18,8 +18,6 @@ import { Eye, EyeOff, ArrowLeft, User, Mail, Phone, MapPin, Lock, Check, ArrowRi
 import { ScreenBackground, SPACING, RADIUS, NeuCard, NeuInput, NeuButton, NEU, Toast } from '../components/ui';
 import { useAuthStore } from '../store';
 import { uploadAPI } from '../api';
-import { useGoogleAuth } from '../hooks/useGoogleAuth';
-import { GoogleLogo } from '../components/GoogleLogo';
 
 const LOGO = require('../../assets/logo.jpg');
 
@@ -253,20 +251,6 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
   const { register, isLoading } = useAuthStore();
   const googleLogin = useAuthStore((s) => s.googleLogin);
 
-  const {
-    promptAsync: promptGoogle,
-    ready: googleReady,
-    notConfigured: googleNotConfigured,
-    unsupportedRuntime: googleUnsupported,
-  } = useGoogleAuth(async (idToken) => {
-    try {
-      await googleLogin(idToken, 'buyer');
-      showToast('Signed in with Google!', 'success');
-    } catch (e: any) {
-      showToast(e?.response?.data?.message || 'Google sign-in failed.', 'error');
-    }
-  });
-
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToastMessage(message);
     setToastType(type);
@@ -317,29 +301,6 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
       }
     } catch (e: any) {
       showToast(e?.message || 'Could not pick image', 'error');
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    if (googleNotConfigured) {
-      showToast('Google Sign-In is not configured yet.', 'info');
-      return;
-    }
-    if (googleUnsupported) {
-      showToast(
-        'Google Sign-In is not available in Expo Go. Install the development APK.',
-        'info'
-      );
-      return;
-    }
-    if (!googleReady) {
-      showToast('Preparing Google Sign-In…', 'info');
-      return;
-    }
-    try {
-      await promptGoogle();
-    } catch (e: any) {
-      showToast('Could not open Google sign-in.', 'error');
     }
   };
 
@@ -406,6 +367,10 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         }
       }
       showToast('Account created successfully!', 'success');
+      // Force navigation to Main screen after successful registration
+      setTimeout(() => {
+        navigation.replace('Main');
+      }, 500);
     } catch (e: any) {
       showToast(e?.response?.data?.message || 'Registration failed. Please try again.', 'error');
     }
@@ -508,21 +473,6 @@ export default function RegisterScreen({ navigation }: { navigation: any }) {
         autoCapitalize="words"
         containerStyle={{ marginTop: SPACING.md }}
       />
-
-      {/* Divider + Google Sign-In */}
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>OR</Text>
-        <View style={styles.dividerLine} />
-      </View>
-      <TouchableOpacity
-        style={styles.googleBtn}
-        onPress={handleGoogleSignIn}
-        activeOpacity={0.8}
-      >
-        <GoogleLogo size={22} />
-        <Text style={styles.googleText}>Continue with Google</Text>
-      </TouchableOpacity>
     </>
   );
 

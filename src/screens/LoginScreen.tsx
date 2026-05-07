@@ -14,8 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ArrowLeft, Mail, Lock } from 'lucide-react-native';
 import { ScreenBackground, SEMANTIC, SPACING, RADIUS, NEON, NEU, NeuCard, NeuInput, NeuButton, Toast } from '../components/ui';
 import { useAuthStore } from '../store';
-import { useGoogleAuth } from '../hooks/useGoogleAuth';
-import { GoogleLogo } from '../components/GoogleLogo';
 
 const LOGO = require('../../assets/logo.jpg');
 
@@ -43,43 +41,6 @@ function LoginContent({ navigation }: any) {
     setToastVisible(true);
   };
 
-  const {
-    promptAsync: promptGoogle,
-    ready: googleReady,
-    notConfigured: googleNotConfigured,
-    unsupportedRuntime: googleUnsupported,
-  } = useGoogleAuth(async (idToken) => {
-    try {
-      await googleLogin(idToken, 'buyer');
-      showToast('Signed in with Google!', 'success');
-    } catch (e: any) {
-      showToast(e?.response?.data?.message || 'Google sign-in failed.', 'error');
-    }
-  });
-
-  const handleGoogleSignIn = async () => {
-    if (googleNotConfigured) {
-      showToast('Google Sign-In is not configured yet.', 'info');
-      return;
-    }
-    if (googleUnsupported) {
-      showToast(
-        'Google Sign-In is not available in Expo Go. Install the development APK.',
-        'info'
-      );
-      return;
-    }
-    if (!googleReady) {
-      showToast('Preparing Google Sign-In…', 'info');
-      return;
-    }
-    try {
-      await promptGoogle();
-    } catch {
-      showToast('Could not open Google sign-in.', 'error');
-    }
-  };
-
   const handleLogin = async () => {
     setError('');
     if (!email || !password) {
@@ -89,6 +50,10 @@ function LoginContent({ navigation }: any) {
     try {
       await login(email.trim().toLowerCase(), password);
       showToast('Login successful! Welcome back.', 'success');
+      // Force navigation to Main screen after successful login
+      setTimeout(() => {
+        navigation.replace('Main');
+      }, 500);
     } catch {
       showToast('Invalid email or password. Please try again.', 'error');
     }
@@ -154,16 +119,6 @@ function LoginContent({ navigation }: any) {
             fullWidth
           />
         </View>
-
-        {/* Google Sign-In */}
-        <TouchableOpacity
-          style={styles.googleBtn}
-          onPress={handleGoogleSignIn}
-          activeOpacity={0.8}
-        >
-          <GoogleLogo size={22} />
-          <Text style={styles.googleText}>Continue with Google</Text>
-        </TouchableOpacity>
 
         {/* Divider */}
         <View style={styles.dividerRow}>
@@ -372,44 +327,44 @@ const styles = StyleSheet.create({
   kbdWrap: { flex: 1 },
 
   // Glass circle logo
-  logoWrap: { alignItems: 'center', marginBottom: SPACING.md },
+  logoWrap: { alignItems: 'center', marginBottom: SPACING.lg, marginTop: SPACING.sm },
   glassCircle: {
-    width: 80, height: 80,
-    borderRadius: 40,
-    borderWidth: 1,
+    width: 88, height: 88,
+    borderRadius: 44,
+    borderWidth: 1.5,
     borderColor: GLASS_BORDER,
     backgroundColor: GLASS_BG,
     overflow: 'hidden',
     shadowColor: NEON.purple,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 12,
   },
 
   // Badge
   badge: {
     alignSelf: 'center',
-    backgroundColor: `${NEON.purple}18`,
-    borderWidth: 1, borderColor: `${NEON.purple}40`,
+    backgroundColor: `${NEON.purple}15`,
+    borderWidth: 1, borderColor: `${NEON.purple}35`,
     borderRadius: RADIUS.full,
-    paddingHorizontal: 14, paddingVertical: 5,
-    marginBottom: SPACING.sm,
+    paddingHorizontal: 16, paddingVertical: 6,
+    marginBottom: SPACING.lg,
   },
-  badgeText: { fontSize: 9, fontWeight: '700', letterSpacing: 2.5, color: NEON.purple },
+  badgeText: { fontSize: 10, fontWeight: '700', letterSpacing: 3, color: NEON.purple },
 
   // Heading
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '800',
     color: '#FFF',
     textAlign: 'center',
-    marginBottom: 4,
-    letterSpacing: -0.3,
+    marginBottom: 6,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.4)',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     marginBottom: SPACING.xl,
     fontWeight: '500',
@@ -424,7 +379,7 @@ const styles = StyleSheet.create({
 
   // Neumorphic card
   neuCard: {
-    width: '95%',
+    width: '100%',
     maxWidth: 480,
     borderRadius: RADIUS['2xl'],
     padding: SPACING['2xl'],
@@ -485,23 +440,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    height: 56,
     paddingHorizontal: 16,
     borderRadius: RADIUS.xl,
     marginBottom: SPACING.lg,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(0,0,0,0.05)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
   },
   googleText: {
-    color: 'rgba(0,0,0,0.7)',
+    color: 'rgba(0,0,0,0.85)',
     fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0.2,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });
