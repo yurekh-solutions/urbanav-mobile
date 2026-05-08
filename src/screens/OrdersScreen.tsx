@@ -27,15 +27,37 @@ import {
 } from '../components/ui';
 import { ordersAPI } from '../api';
 
-type OrderStatus = 'pending' | 'confirmed' | 'delivered' | 'completed' | 'cancelled';
+type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'preparing'
+  | 'delivered'
+  | 'in-progress'
+  | 'completed'
+  | 'cancelled';
 
-const STATUS_COLORS: Record<OrderStatus, { bg: string; fg: string; label: string }> = {
-  pending:   { bg: 'rgba(245, 158, 11, 0.15)', fg: '#B8700B', label: 'Pending' },
-  confirmed: { bg: 'rgba(59, 130, 246, 0.15)', fg: '#1E40AF', label: 'Confirmed' },
-  delivered: { bg: 'rgba(34, 224, 130, 0.18)', fg: '#0E7A3C', label: 'Delivered' },
-  completed: { bg: 'rgba(123, 37, 244, 0.15)', fg: LIGHT.accent, label: 'Completed' },
-  cancelled: { bg: 'rgba(255, 91, 110, 0.15)', fg: '#A8152B', label: 'Cancelled' },
+type OrderBucket = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+
+const STATUS_COLORS: Record<string, { bg: string; fg: string; label: string }> = {
+  pending:       { bg: 'rgba(245, 158, 11, 0.15)', fg: '#B8700B', label: 'Pending' },
+  confirmed:     { bg: 'rgba(59, 130, 246, 0.15)', fg: '#1E40AF', label: 'Confirmed' },
+  preparing:     { bg: 'rgba(59, 130, 246, 0.15)', fg: '#1E40AF', label: 'Preparing' },
+  delivered:     { bg: 'rgba(34, 224, 130, 0.18)', fg: '#0E7A3C', label: 'Delivered' },
+  'in-progress': { bg: 'rgba(34, 224, 130, 0.18)', fg: '#0E7A3C', label: 'Ongoing' },
+  completed:     { bg: 'rgba(123, 37, 244, 0.15)', fg: LIGHT.accent, label: 'Completed' },
+  cancelled:     { bg: 'rgba(255, 91, 110, 0.15)', fg: '#A8152B', label: 'Cancelled' },
 };
+
+// Map backend status to a user-friendly bucket (kept in sync with supplier app).
+function toBucket(order: any): OrderBucket {
+  const status = (order?.status ?? 'pending') as OrderStatus;
+  if (status === 'cancelled') return 'cancelled';
+  if (status === 'completed') return 'completed';
+  if (order?.otpStartVerified && !order?.otpEndVerified) return 'ongoing';
+  if (status === 'preparing' || status === 'delivered' || status === 'in-progress')
+    return 'ongoing';
+  return 'upcoming';
+}
 
 const LOCAL_FALLBACK = [
   {
@@ -73,10 +95,10 @@ const LOCAL_FALLBACK = [
   },
 ];
 
-const FILTERS: { label: string; value: string }[] = [
+const FILTERS: { label: string; value: 'all' | OrderBucket }[] = [
   { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Upcoming', value: 'upcoming' },
+  { label: 'Ongoing', value: 'ongoing' },
   { label: 'Completed', value: 'completed' },
   { label: 'Cancelled', value: 'cancelled' },
 ];
@@ -94,6 +116,8 @@ export default function OrdersScreen({ navigation }: any) {
         id: o.id ?? o._id,
         orderNumber: o.orderNumber ?? `UAV-${(o.id ?? o._id ?? '').toString().slice(-3)}`,
         status: (o.status ?? 'pending') as OrderStatus,
+        otpStartVerified: !!o.otpStartVerified,
+        otpEndVerified: !!o.otpEndVerified,
         supplier: o.supplier?.businessName || o.supplierName || 'UrbanAV Vendor',
         items: (o.items ?? []).map((i: any) => i.name ?? i),
         total: o.total ?? 0,
@@ -127,8 +151,12 @@ export default function OrdersScreen({ navigation }: any) {
   };
 
   const visible =
-    filter === 'all' ? orders : orders.filter((o) => o.status === filter);
-  const activeCount = orders.filter((o) => o.status === 'confirmed').length;
+    filter === 'all'
+      ? orders
+      : orders.filter((o) => toBucket(o) === filter);
+  const activeCount = orders.filter(
+    (o) => toBucket(o) === 'upcoming' || toBucket(o) === 'ongoing'
+  ).length;
 
   return (
     <LightScreenBackground>
@@ -234,7 +262,7 @@ export default function OrdersScreen({ navigation }: any) {
                 >
                   {filter === 'all'
                     ? 'Post a requirement to get started'
-                    : `No ${filter} orders`}
+                    : `No ${filter} orders right now`}
                 </Text>
                 <BlackButton
                   title="POST REQUIREMENT"
@@ -247,6 +275,7 @@ export default function OrdersScreen({ navigation }: any) {
             renderItem={({ item, index }) => {
               const statusCfg =
                 STATUS_COLORS[item.status as OrderStatus] || STATUS_COLORS.pending;
+              const bucket = toBucket(item);
               return (
                 <SlideUpView delay={index * 60}>
                   <LightCard padding={SPACING.base}>
@@ -389,7 +418,7 @@ export default function OrdersScreen({ navigation }: any) {
                           Details
                         </Text>
                       </TouchableOpacity>
-                      {item.status === 'confirmed' && (
+                      {(bucket === 'upcoming' || bucket === 'ongoing') && (
                         <TouchableOpacity
                           onPress={() =>
                             navigation.navigate('Chat', { orderId: item.id })
