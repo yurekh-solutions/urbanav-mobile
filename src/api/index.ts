@@ -79,6 +79,9 @@ export const requirementAPI = {
   create: (data: any) => api.post('/requirements', data),
   getMy: () => api.get('/requirements/me'),
   getById: (id: string) => api.get(`/requirements/${id}`),
+  getOffers: (id: string) => api.get(`/requirements/${id}/offers`),
+  selectOffer: (id: string, inquiryId: string) => api.patch(`/requirements/${id}/select-offer`, { inquiryId }),
+  close: (id: string) => api.patch(`/requirements/${id}/close`),
 };
 
 export const matchAPI = {

@@ -30,6 +30,7 @@ import PaymentMethodsScreen from './src/screens/PaymentMethodsScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import TermsScreen from './src/screens/TermsScreen';
 import PrivacyScreen from './src/screens/PrivacyScreen';
+import RequirementOffersScreen from './src/screens/RequirementOffersScreen';
 import { BRAND, NEON, SURFACE, TEXT, GLASS } from './src/theme/colors';
 import { LAYOUT } from './src/theme/spacing';
 import { TabBounce } from './src/components/ui';
@@ -235,6 +236,7 @@ export default function App() {
             <Stack.Screen name="MatchResults" component={MatchResultsScreen} />
             <Stack.Screen name="Inquiry" component={InquiryScreen} />
             <Stack.Screen name="BookingConfirm" component={BookingConfirmScreen} options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="RequirementOffers" component={RequirementOffersScreen} options={{ title: 'Compare Offers' }} />
             <Stack.Screen name="Addresses" component={AddressesScreen} />
             <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
